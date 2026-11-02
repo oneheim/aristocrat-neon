@@ -5,7 +5,7 @@ import Logo from './Logo.jsx'
 import { CONTACTS } from '../config.js'
 
 const NAV = [
-  { to: '/#catalog', label: 'Каталог' },
+  { to: '/catalog', label: 'Каталог' },
   { to: '/#constructor', label: 'Конструктор' },
   { to: '/#process', label: 'Как работаем' },
   { to: '/#contacts', label: 'Контакты' },
@@ -25,6 +25,8 @@ export default function Header() {
 
   useEffect(() => setOpen(false), [location])
 
+  const isActive = (to) => !to.includes('#') && location.pathname.startsWith(to)
+
   useEffect(() => {
     document.body.classList.toggle('is-locked', open)
   }, [open])
@@ -35,7 +37,12 @@ export default function Header() {
         <Logo />
         <nav className="header__nav" aria-label="Основная навигация">
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className="header__link">
+            <Link
+              key={n.to}
+              to={n.to}
+              className={`header__link${isActive(n.to) ? ' is-active' : ''}`}
+              aria-current={isActive(n.to) ? 'page' : undefined}
+            >
               {n.label}
             </Link>
           ))}

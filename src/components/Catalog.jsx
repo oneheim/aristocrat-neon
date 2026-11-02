@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom'
 
 import SectionTitle from './SectionTitle.jsx'
 import ProductCard from './ProductCard.jsx'
-import { PRODUCTS } from '../data/products.js'
+import { FEATURED, PRODUCTS, signsWord } from '../data/products.js'
 import { Arrow } from './Hero.jsx'
+
+const MORE = PRODUCTS.filter((p) => !p.featured)
 
 export default function Catalog() {
   return (
@@ -16,9 +18,22 @@ export default function Catalog() {
         aside="Каждую вывеску из каталога можно сделать в другом цвете, размере или с вашим текстом. Цена указана за вывеску на прозрачном акриле по контуру."
       />
       <div className="catalog-grid">
-        {PRODUCTS.map((p, i) => (
+        {FEATURED.map((p, i) => (
           <ProductCard key={p.slug} product={p} delay={(i % 3) * 90} />
         ))}
+        <Link to="/catalog" className="catalog-all" data-reveal>
+          <span className="catalog-all__thumbs" aria-hidden="true">
+            {MORE.slice(0, 5).map((p) => (
+              <img key={p.slug} src={p.card} alt="" loading="lazy" width="56" height="56" />
+            ))}
+          </span>
+          <span className="catalog-all__text">
+            Ещё {MORE.length} {signsWord(MORE.length)} в каталоге
+          </span>
+          <span className="catalog-all__go">
+            Весь каталог <Arrow />
+          </span>
+        </Link>
         <Link to="/#constructor" className="catalog-custom" data-reveal data-reveal-delay="90">
           <span className="eyebrow">Не нашли свою?</span>
           <span className="catalog-custom__title">

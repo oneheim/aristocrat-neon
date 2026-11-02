@@ -27,7 +27,9 @@ function ProductView({ product }) {
   const [active, setActive] = useState(0)
   const [colorId, setColorId] = useState(product.defaultColor)
   const color = colorById(colorId)
-  const related = PRODUCTS.filter((p) => p.slug !== product.slug).slice(0, 3)
+  const others = PRODUCTS.filter((p) => p.slug !== product.slug)
+  const isSimilar = (p) => p.categories.some((c) => product.categories.includes(c))
+  const related = [...others.filter(isSimilar), ...others.filter((p) => !isSimilar(p))].slice(0, 3)
 
   useEffect(() => {
     document.title = `Неоновая вывеска «${product.name}» — aristocrat. neon`
@@ -45,7 +47,7 @@ function ProductView({ product }) {
       <nav className="crumbs" aria-label="Хлебные крошки">
         <Link to="/">Главная</Link>
         <span>/</span>
-        <Link to="/#catalog">Каталог</Link>
+        <Link to="/catalog">Каталог</Link>
         <span>/</span>
         <span aria-current="page">{product.name}</span>
       </nav>
@@ -218,7 +220,7 @@ function ProductView({ product }) {
           <h2 className="section-title__h">
             Ещё из каталога
           </h2>
-          <Link to="/#catalog" className="btn btn--ghost btn--sm">
+          <Link to="/catalog" className="btn btn--ghost btn--sm">
             Весь каталог
           </Link>
         </div>

@@ -4,6 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom'
 import Header from './components/Header.jsx'
 import Footer from './components/Footer.jsx'
 import Home from './pages/Home.jsx'
+import CatalogPage from './pages/CatalogPage.jsx'
 import Product from './pages/Product.jsx'
 import NotFound from './pages/NotFound.jsx'
 import { useReveal } from './lib/useReveal.js'
@@ -55,6 +56,7 @@ export default function App() {
       <main className={`page-stage is-${stage}`} key={shown.pathname}>
         <Routes location={shown}>
           <Route path="/" element={<Home />} />
+          <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/catalog/:slug" element={<Product />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

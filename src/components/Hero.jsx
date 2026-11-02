@@ -49,7 +49,7 @@ export default function Hero() {
               Собрать свою вывеску
               <Arrow />
             </Link>
-            <Link to="/#catalog" className="btn btn--ghost">
+            <Link to="/catalog" className="btn btn--ghost">
               Смотреть каталог
             </Link>
           </div>
