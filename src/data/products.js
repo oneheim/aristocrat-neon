@@ -294,7 +294,7 @@ export const PRODUCTS = [
     defaultColor: 'pink',
     glow: '#ff4fa6',
     tag: 'Детский праздник',
-    categories: ['holiday', 'kids'],
+    categories: ['kids', 'holiday'],
     fits: ['Детская комната', 'Детский праздник', 'Девичник', 'Салон красоты', 'Фотостудия'],
     lead: 'Надпись «Принцесса!» размашистым почерком. Для детской, девичника или салона красоты.',
     description: [
@@ -507,6 +507,9 @@ export const PRODUCTS = [
 ]
 
 export const FEATURED = PRODUCTS.filter((p) => p.featured)
+
+// Основная категория — первая в списке categories, её название показывается на карточке.
+export const categoryName = (product) => CATEGORIES.find((c) => c.id === product.categories[0]).name
 
 export const productBySlug = (slug) => PRODUCTS.find((p) => p.slug === slug)
 

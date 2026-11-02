@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import { formatPrice } from '../data/products.js'
+import { categoryName, formatPrice } from '../data/products.js'
 import { Arrow } from './Hero.jsx'
 
 export default function ProductCard({ product, delay = 0 }) {
@@ -14,7 +14,7 @@ export default function ProductCard({ product, delay = 0 }) {
     >
       <div className="product-card__media">
         <img src={product.card} alt={`Неоновая вывеска «${product.name}»`} loading="lazy" width="700" height="700" />
-        <span className="product-card__tag">{product.tag}</span>
+        <span className="product-card__tag">{categoryName(product)}</span>
         <span className="product-card__go" aria-hidden="true">
           <Arrow dir="up-right" />
         </span>

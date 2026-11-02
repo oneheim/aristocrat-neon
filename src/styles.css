@@ -2620,7 +2620,29 @@ ol {
   display: none;
 }
 
+.cat-bar__thumb {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 0;
+  width: 0;
+  border-radius: 99px;
+  border: 1px solid rgba(245, 244, 236, 0.26);
+  background: rgba(245, 244, 236, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 8px 22px -8px rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  pointer-events: none;
+  transition:
+    transform 0.55s var(--ease),
+    width 0.55s var(--ease);
+}
+
 .cat-chip {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -2632,19 +2654,12 @@ ol {
   font-weight: 500;
   color: var(--muted);
   white-space: nowrap;
-  transition:
-    background 0.25s ease,
-    color 0.25s ease;
+  transition: color 0.3s ease;
 }
 
-.cat-chip:hover {
-  color: var(--cream);
-  background: rgba(245, 244, 236, 0.07);
-}
-
+.cat-chip:hover,
 .cat-chip.is-active {
-  background: var(--cream);
-  color: #111;
+  color: var(--cream);
 }
 
 .cat-chip__n {
@@ -2657,11 +2672,11 @@ ol {
   background: rgba(245, 244, 236, 0.08);
   font-size: 11px;
   font-weight: 700;
+  transition: background 0.3s ease;
 }
 
 .cat-chip.is-active .cat-chip__n {
-  background: var(--red);
-  color: var(--cream);
+  background: rgba(245, 244, 236, 0.16);
 }
 
 .cat-meta {

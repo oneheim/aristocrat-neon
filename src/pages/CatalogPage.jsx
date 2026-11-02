@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import SectionTitle from '../components/SectionTitle.jsx'
@@ -74,6 +74,8 @@ const MIN_PRICE = Math.min(...PRODUCTS.map((p) => p.price))
 export default function CatalogPage() {
   const [params, setParams] = useSearchParams()
   const anchor = useRef(null)
+  const bar = useRef(null)
+  const thumb = useRef(null)
 
   const cat = COUNTS[params.get('cat')] ? params.get('cat') : 'all'
   const sort = SORTS.some((s) => s.id === params.get('sort')) ? params.get('sort') : 'popular'
@@ -81,6 +83,24 @@ export default function CatalogPage() {
   useEffect(() => {
     document.title = 'Каталог неоновых вывесок — aristocrat. neon'
   }, [])
+
+  // Бегунок под активной категорией. Пересчитываем и при смене размеров:
+  // ширина кнопок меняется, когда догружается шрифт или поворачивается экран.
+  useLayoutEffect(() => {
+    const el = bar.current
+    const active = el.querySelector('.cat-chip.is-active')
+    const place = () => {
+      thumb.current.style.width = `${active.offsetWidth}px`
+      thumb.current.style.transform = `translateX(${active.offsetLeft}px)`
+    }
+    place()
+    if (el.scrollWidth > el.clientWidth) {
+      el.scrollTo({ left: active.offsetLeft - (el.clientWidth - active.offsetWidth) / 2, behavior: 'smooth' })
+    }
+    const ro = new ResizeObserver(place)
+    el.querySelectorAll('.cat-chip').forEach((c) => ro.observe(c))
+    return () => ro.disconnect()
+  }, [cat])
 
   const list = useMemo(() => {
     const items = cat === 'all' ? PRODUCTS : PRODUCTS.filter((p) => p.categories.includes(cat))
@@ -159,7 +179,8 @@ export default function CatalogPage() {
 
       <section className="section cat-section" id="signs" aria-label="Вывески">
         <div ref={anchor} />
-        <div className="cat-bar" role="group" aria-label="Категории">
+        <div className="cat-bar" role="group" aria-label="Категории" ref={bar}>
+          <span className="cat-bar__thumb" ref={thumb} aria-hidden="true" />
           <button
             type="button"
             className={`cat-chip${cat === 'all' ? ' is-active' : ''}`}
