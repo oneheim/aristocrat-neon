@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import SectionTitle from '../components/SectionTitle.jsx'
@@ -6,6 +6,7 @@ import ProductCard from '../components/ProductCard.jsx'
 import CtaBlock from '../components/CtaBlock.jsx'
 import { Arrow } from '../components/Hero.jsx'
 import { CATEGORIES, PRODUCTS, formatPrice, signsWord } from '../data/products.js'
+import { useSlidingThumb } from '../lib/useSlidingThumb.js'
 
 const RIBS = Array.from({ length: 22 })
 
@@ -84,23 +85,7 @@ export default function CatalogPage() {
     document.title = 'Каталог неоновых вывесок — aristocrat. neon'
   }, [])
 
-  // Бегунок под активной категорией. Пересчитываем и при смене размеров:
-  // ширина кнопок меняется, когда догружается шрифт или поворачивается экран.
-  useLayoutEffect(() => {
-    const el = bar.current
-    const active = el.querySelector('.cat-chip.is-active')
-    const place = () => {
-      thumb.current.style.width = `${active.offsetWidth}px`
-      thumb.current.style.transform = `translateX(${active.offsetLeft}px)`
-    }
-    place()
-    if (el.scrollWidth > el.clientWidth) {
-      el.scrollTo({ left: active.offsetLeft - (el.clientWidth - active.offsetWidth) / 2, behavior: 'smooth' })
-    }
-    const ro = new ResizeObserver(place)
-    el.querySelectorAll('.cat-chip').forEach((c) => ro.observe(c))
-    return () => ro.disconnect()
-  }, [cat])
+  useSlidingThumb(bar, thumb, cat)
 
   const list = useMemo(() => {
     const items = cat === 'all' ? PRODUCTS : PRODUCTS.filter((p) => p.categories.includes(cat))

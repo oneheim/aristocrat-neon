@@ -6,6 +6,7 @@ import { CONTACTS } from '../config.js'
 
 const NAV = [
   { to: '/catalog', label: 'Каталог' },
+  { to: '/cases', label: 'Кейсы' },
   { to: '/#constructor', label: 'Конструктор' },
   { to: '/#process', label: 'Как работаем' },
   { to: '/#contacts', label: 'Контакты' },

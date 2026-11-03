@@ -54,6 +54,7 @@ export default function Footer() {
             <h3 className="footer__h">Навигация</h3>
             <ul>
               <li><Link to="/catalog">Каталог</Link></li>
+              <li><Link to="/cases">Кейсы</Link></li>
               <li><Link to="/#constructor">Конструктор</Link></li>
               <li><Link to="/#process">Как работаем</Link></li>
               <li><Link to="/#contacts">Контакты</Link></li>

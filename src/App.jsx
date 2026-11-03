@@ -5,6 +5,7 @@ import Header from './components/Header.jsx'
 import Footer from './components/Footer.jsx'
 import Home from './pages/Home.jsx'
 import CatalogPage from './pages/CatalogPage.jsx'
+import CasesPage from './pages/CasesPage.jsx'
 import Product from './pages/Product.jsx'
 import NotFound from './pages/NotFound.jsx'
 import { useReveal } from './lib/useReveal.js'
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/catalog/:slug" element={<Product />} />
+          <Route path="/cases" element={<CasesPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
