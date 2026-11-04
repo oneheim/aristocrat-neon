@@ -1,6 +1,6 @@
 // Варианты и формула цены конструктора вывески.
 import { NEON_COLORS } from './colors.js'
-import { PRODUCTS } from './products.js'
+import { SIGNS } from './products.js'
 
 // quote — цены нет на сайте, стоимость считает менеджер по макету. short — подпись на узком экране.
 export const TYPES = [
@@ -81,7 +81,7 @@ export const SIZE = { min: 10, max: 300 }
 
 // Фото вывесок из каталога для подсказки «как выглядит этот цвет».
 export const COLOR_PHOTOS = Object.fromEntries(
-  NEON_COLORS.map((c) => [c.id, PRODUCTS.find((p) => p.photoColor === c.id)?.card]).filter(([, src]) => src),
+  NEON_COLORS.map((c) => [c.id, SIGNS.find((p) => p.photoColor === c.id)?.card]).filter(([, src]) => src),
 )
 
 // Цена неоновой вывески. Сетка S–XL задана по ширине вывески (50–160 см); свободный размер

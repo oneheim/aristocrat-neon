@@ -50,7 +50,8 @@ export default function Footer() {
           <div data-reveal data-reveal-delay="80">
             <h3 className="footer__h">Навигация</h3>
             <ul>
-              <li><Link to="/catalog">Каталог</Link></li>
+              <li><Link to="/catalog">Неоновые вывески</Link></li>
+              <li><Link to="/catalog?type=marquee">Бегущие строки</Link></li>
               <li><Link to="/catalog?mode=rent">Аренда</Link></li>
               <li><Link to="/cases">Кейсы</Link></li>
               <li><Link to="/#constructor">Конструктор</Link></li>

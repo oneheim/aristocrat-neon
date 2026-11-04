@@ -13,7 +13,6 @@ export const CATEGORIES = [
   { id: 'love', name: 'Любовь и свадьба' },
   { id: 'characters', name: 'Персонажи' },
   { id: 'kids', name: 'Детям' },
-  { id: 'marquee', name: 'Бегущие строки' },
 ]
 
 // Бегущие строки: вместо фото — анимированное табло (components/MarqueeBoard.jsx).
@@ -23,13 +22,13 @@ const marquee = (item) => ({
   price: null,
   colors: LED_COLORS,
   defaultColor: item.photoColor,
-  categories: ['marquee'],
+  categories: [],
   images: [],
   card: null,
   ...item,
 })
 
-const MARQUEES = [
+export const MARQUEES = [
   marquee({
     slug: 'stroka-vitrina',
     name: 'Строка для витрины',
@@ -619,6 +618,8 @@ export const PRODUCTS = [
   ...MARQUEES,
 ]
 
+// Каталог делится на два раздела: неоновые вывески (/catalog) и бегущие строки (/catalog?type=marquee).
+export const SIGNS = PRODUCTS.filter((p) => !p.marquee)
 export const FEATURED = PRODUCTS.filter((p) => p.featured)
 export const RENTABLE = PRODUCTS.filter((p) => p.rent)
 
@@ -626,7 +627,8 @@ export const RENTABLE = PRODUCTS.filter((p) => p.rent)
 export const RENT_TERMS = ['24 часа', '48 часов', '72 часа']
 
 // Основная категория — первая в списке categories, её название показывается на карточке.
-export const categoryName = (product) => CATEGORIES.find((c) => c.id === product.categories[0]).name
+export const categoryName = (product) =>
+  product.marquee ? 'Бегущая строка' : CATEGORIES.find((c) => c.id === product.categories[0]).name
 
 export const productBySlug = (slug) => PRODUCTS.find((p) => p.slug === slug)
 
@@ -645,6 +647,7 @@ export const plural = (n, [one, few, many]) => {
 }
 
 export const signsWord = (n) => plural(n, ['вывеска', 'вывески', 'вывесок'])
+export const marqueesWord = (n) => plural(n, ['бегущая строка', 'бегущие строки', 'бегущих строк'])
 
 // Характеристики бегущей строки — без обещаний по срокам и электронике: детали согласует менеджер.
 export const MARQUEE_SPECS = [

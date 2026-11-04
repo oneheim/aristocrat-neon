@@ -11,6 +11,8 @@ import { colorById } from '../data/colors.js'
 import { sendOrder } from '../lib/order.js'
 import { useSlidingThumb } from '../lib/useSlidingThumb.js'
 
+const SECTION = '/catalog?type=marquee'
+
 const PERKS = [
   ['Бесплатный макет', 'покажем вывеску в вашем цвете и размере до оплаты'],
   ['От 1 рабочего дня', 'собственное производство в Москве'],
@@ -45,7 +47,9 @@ function ProductView({ product }) {
   // В аренду сдаём вывески из наличия — цвет свечения как на фото.
   const color = colorById(renting ? product.photoColor : colorId)
   const others = PRODUCTS.filter((p) => p.slug !== product.slug)
-  const isSimilar = (p) => p.categories.some((c) => product.categories.includes(c))
+  // Похожие — из того же раздела каталога (бегущие строки к бегущим строкам), лучше всего с общей категорией.
+  const sameSection = (p) => Boolean(p.marquee) === Boolean(product.marquee)
+  const isSimilar = (p) => sameSection(p) && (product.marquee || p.categories.some((c) => product.categories.includes(c)))
   const related = [...others.filter(isSimilar), ...others.filter((p) => !isSimilar(p))].slice(0, 3)
 
   const kind = product.marquee ? 'Бегущая строка' : 'Неоновая вывеска'
@@ -79,6 +83,12 @@ function ProductView({ product }) {
         <span>/</span>
         <Link to="/catalog">Каталог</Link>
         <span>/</span>
+        {product.marquee && (
+          <>
+            <Link to={SECTION}>Бегущие строки</Link>
+            <span>/</span>
+          </>
+        )}
         <span aria-current="page">{product.name}</span>
       </nav>
 
@@ -307,8 +317,8 @@ function ProductView({ product }) {
           <h2 className="section-title__h">
             Ещё из каталога
           </h2>
-          <Link to="/catalog" className="btn btn--ghost btn--sm">
-            Весь каталог
+          <Link to={product.marquee ? SECTION : '/catalog'} className="btn btn--ghost btn--sm">
+            {product.marquee ? 'Все бегущие строки' : 'Весь каталог'}
           </Link>
         </div>
         <div className="catalog-grid catalog-grid--related">

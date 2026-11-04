@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 
 import SectionTitle from './SectionTitle.jsx'
 import ProductCard from './ProductCard.jsx'
-import { FEATURED, PRODUCTS, signsWord } from '../data/products.js'
+import { FEATURED, SIGNS, signsWord } from '../data/products.js'
 import { Arrow } from './Hero.jsx'
 
-const MORE = PRODUCTS.filter((p) => !p.featured)
+const MORE = SIGNS.filter((p) => !p.featured)
 
 export default function Catalog() {
   return (
@@ -23,11 +23,9 @@ export default function Catalog() {
         ))}
         <Link to="/catalog" className="catalog-all" data-reveal>
           <span className="catalog-all__thumbs" aria-hidden="true">
-            {MORE.filter((p) => p.card)
-              .slice(0, 5)
-              .map((p) => (
-                <img key={p.slug} src={p.card} alt="" loading="lazy" width="56" height="56" />
-              ))}
+            {MORE.slice(0, 5).map((p) => (
+              <img key={p.slug} src={p.card} alt="" loading="lazy" width="56" height="56" />
+            ))}
           </span>
           <span className="catalog-all__text">
             Ещё {MORE.length} {signsWord(MORE.length)} в каталоге

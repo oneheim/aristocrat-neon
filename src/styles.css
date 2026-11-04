@@ -391,18 +391,32 @@ ol {
   position: fixed;
   inset: 0 0 auto;
   z-index: 50;
-  transition:
-    background 0.4s ease,
-    border-color 0.4s ease,
-    backdrop-filter 0.4s ease;
+  transition: border-color 0.4s ease;
   border-bottom: 1px solid transparent;
+}
+
+/* Фон и размытие — на отдельном слое: backdrop-filter на самой шапке сделал бы её точкой отсчёта
+   для position: fixed, и мобильное меню сжалось бы до высоты шапки. */
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  background: rgba(10, 10, 10, 0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  transition: opacity 0.4s ease;
 }
 
 .header.is-scrolled,
 .header.is-open {
-  background: rgba(10, 10, 10, 0.72);
-  backdrop-filter: blur(18px) saturate(140%);
   border-bottom-color: var(--line);
+}
+
+.header.is-scrolled::before,
+.header.is-open::before {
+  opacity: 1;
 }
 
 .header__inner {
@@ -496,6 +510,95 @@ ol {
   background: rgba(245, 244, 236, 0.1);
 }
 
+/* Выпадающий список «Каталог» */
+.header__drop {
+  position: relative;
+}
+
+.header__drop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header__drop-btn svg {
+  transition: transform 0.25s var(--ease);
+}
+
+.header__drop.is-open .header__drop-btn {
+  color: var(--cream);
+  background: rgba(245, 244, 236, 0.1);
+}
+
+.header__drop.is-open .header__drop-btn svg {
+  transform: rotate(180deg);
+}
+
+.header__menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 290px;
+  padding: 6px;
+  border-radius: 18px;
+  border: 1px solid var(--line-strong);
+  background: rgba(18, 18, 18, 0.95);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -6px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s var(--ease),
+    visibility 0.25s;
+}
+
+/* Невидимый мостик над списком: мышь не «выпадает» в зазор между кнопкой и меню. */
+.header__menu::before {
+  content: '';
+  position: absolute;
+  inset: -14px 0 100%;
+}
+
+.header__drop.is-open .header__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.header__menu-link {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--cream);
+  transition: background 0.2s ease;
+}
+
+.header__menu-link small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dim);
+}
+
+.header__menu-link:hover,
+.header__menu-link:focus-visible {
+  background: rgba(245, 244, 236, 0.07);
+}
+
+.header__menu-link.is-active {
+  background: rgba(212, 57, 41, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 90, 70, 0.4);
+}
+
 .header__actions {
   display: flex;
   align-items: center;
@@ -545,6 +648,7 @@ ol {
 .mobile-menu {
   position: fixed;
   inset: 78px 0 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -588,6 +692,49 @@ ol {
 .is-open .mobile-menu__link {
   opacity: 1;
   transform: none;
+}
+
+.mobile-menu__group {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.5s var(--ease);
+}
+
+.is-open .mobile-menu__group {
+  opacity: 1;
+  transform: none;
+}
+
+.mobile-menu__group .mobile-menu__link--group {
+  padding-bottom: 8px;
+  border-bottom: 0;
+}
+
+.mobile-menu__sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 28px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mobile-menu__sub small {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dim);
+}
+
+.mobile-menu__sub.is-active {
+  background: rgba(212, 57, 41, 0.14);
 }
 
 .mobile-menu__num {
@@ -1148,6 +1295,11 @@ ol {
 
 .catalog-custom:hover {
   border-color: var(--red);
+}
+
+button.catalog-custom {
+  width: 100%;
+  text-align: left;
 }
 
 .catalog-custom .eyebrow {
@@ -1797,6 +1949,8 @@ ol {
   --side-hi: #bebcb5;
   --side-lo: #5f5d59;
   color: var(--face);
+  /* Обводка цветом лица делает буквы толще: у шрифтов подключено по одному начертанию. */
+  -webkit-text-stroke: 0.035em var(--face);
   text-shadow:
     0.0022em 0.0058em 0 color-mix(in srgb, var(--side-lo) 8%, var(--side-hi)),
     0.0044em 0.0116em 0 color-mix(in srgb, var(--side-lo) 17%, var(--side-hi)),
