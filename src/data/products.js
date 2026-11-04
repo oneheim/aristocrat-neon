@@ -13,16 +13,110 @@ export const CATEGORIES = [
   { id: 'love', name: 'Любовь и свадьба' },
   { id: 'characters', name: 'Персонажи' },
   { id: 'kids', name: 'Детям' },
+  { id: 'marquee', name: 'Бегущие строки' },
+]
+
+// Бегущие строки: вместо фото — анимированное табло (components/MarqueeBoard.jsx).
+// marquee.kind — формат табло, header — неподвижный заголовок, text — бегущий текст. Цена по запросу (price: null).
+const LED_COLORS = ['red', 'yellow', 'green', 'sky', 'pink', 'cold-white', 'rgb']
+const marquee = (item) => ({
+  price: null,
+  colors: LED_COLORS,
+  defaultColor: item.photoColor,
+  categories: ['marquee'],
+  images: [],
+  card: null,
+  ...item,
+})
+
+const MARQUEES = [
+  marquee({
+    slug: 'stroka-vitrina',
+    name: 'Строка для витрины',
+    size: '640 × 160 мм',
+    photoColor: 'red',
+    glow: '#ff3b2e',
+    tag: 'Бегущая строка',
+    marquee: { kind: 'compact', text: 'ОТКРЫТО • ЗАХОДИТЕ НА КОФЕ •' },
+    fits: ['Витрина', 'Кофейня', 'Салон', 'Магазин', 'Ресепшен'],
+    lead: 'Компактная светодиодная строка в одну линию: режим работы, приглашение или название услуги.',
+    description: [
+      'Небольшое табло, которое заметно с улицы даже днём. Ставится на витрину или над стойкой и показывает короткое сообщение, которое бежит по кругу.',
+      'Текст, цвет и размер подберём под вашу витрину. Стоимость посчитаем после того, как обсудим задачу.',
+    ],
+  }),
+  marquee({
+    slug: 'tablo-menu',
+    name: 'Табло с заголовком',
+    size: '960 × 480 мм',
+    photoColor: 'yellow',
+    glow: '#ffe53b',
+    tag: 'Бегущая строка',
+    marquee: { kind: 'board', header: 'МЕНЮ ДНЯ', text: 'КАПУЧИНО 250 ₽ • СЫРНИКИ 320 ₽ • ЛИМОНАД 290 ₽ •' },
+    fits: ['Кафе', 'Столовая', 'Зона выдачи', 'Фуд-корт', 'Ресепшен'],
+    lead: 'Две строки: заголовок стоит на месте, а под ним бегут сообщения — меню, акции, номера заказов.',
+    description: [
+      'Табло для стойки, зоны выдачи или входа. Верхняя строка задаёт тему, нижняя меняется: блюда дня, цены, объявления.',
+      'Размер и число строк подберём под место установки. Стоимость посчитаем после того, как обсудим задачу.',
+    ],
+  }),
+  marquee({
+    slug: 'stroka-rgb',
+    name: 'Цветная RGB-строка',
+    size: '1600 × 320 мм',
+    photoColor: 'rgb',
+    glow: '#62d9ff',
+    tag: 'Бегущая строка',
+    marquee: { kind: 'wide', text: 'СКИДКА 20% НА ВСЁ • ТОЛЬКО СЕГОДНЯ •' },
+    fits: ['Витрина', 'Магазин', 'Торговый центр', 'Бар', 'Шоурум'],
+    lead: 'Широкая строка, где буквы переливаются всеми цветами: для акций и предложений дня.',
+    description: [
+      'Яркое табло для витрины или зала, которое невозможно не заметить. Хорошо работает для распродаж, новинок и рекламных сообщений.',
+      'Длину строки подберём под витрину. Стоимость посчитаем после того, как обсудим задачу.',
+    ],
+  }),
+  marquee({
+    slug: 'stroka-panorama',
+    name: 'Длинная строка над входом',
+    size: '2560 × 320 мм',
+    photoColor: 'green',
+    glow: '#41ff70',
+    tag: 'Бегущая строка',
+    marquee: { kind: 'panorama', text: 'ДОБРО ПОЖАЛОВАТЬ • МЫ ОТКРЫТЫ ДО 22:00 • ДОСТАВКА ПО МОСКВЕ •' },
+    fits: ['Вход', 'Фасад', 'Стойка', 'Торговый зал', 'Офис'],
+    lead: 'Узкая длинная линия над входом или вдоль стойки: несколько сообщений в непрерывном движении.',
+    description: [
+      'Строка во всю ширину входа или прилавка. Сообщения идут друг за другом без пауз и хорошо читаются издалека.',
+      'Делаем любой длины под ваше место. Стоимость посчитаем после того, как обсудим задачу.',
+    ],
+  }),
+  marquee({
+    slug: 'tablo-prazdnik',
+    name: 'Табло для праздника',
+    size: '960 × 320 мм',
+    photoColor: 'pink',
+    glow: '#ff4fa6',
+    tag: 'Бегущая строка',
+    marquee: { kind: 'event', header: 'С ДНЁМ РОЖДЕНИЯ', text: 'МАША • 18 ЛЕТ • ПОЗДРАВЛЯЕМ •' },
+    fits: ['День рождения', 'Свадьба', 'Выпускной', 'Фотозона', 'Банкет'],
+    lead: 'Приветствие на празднике: имена, поздравление и программа вечера бегут под неподвижным заголовком.',
+    description: [
+      'Табло встречает гостей и становится частью оформления: розовая рамка, мягкое свечение и ваши слова в движении.',
+      'Цвет и текст подберём под праздник. Стоимость посчитаем после того, как обсудим задачу.',
+    ],
+  }),
 ]
 
 // Порядок массива — порядок «Популярные» на странице каталога.
 // featured — шесть вывесок, которые показываются на главной.
+// rent — цена аренды на 24 / 48 / 72 часа, есть только у вывесок, которые сдаём в аренду (aristocrat-neon.ru/arenda).
 export const PRODUCTS = [
   {
     slug: 'candy-bar',
     name: 'Candy Bar',
     price: 8000,
     size: '1750 × 330 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'warm-white',
     colors: ALL_COLORS,
     defaultColor: 'warm-white',
@@ -44,6 +138,7 @@ export const PRODUCTS = [
     name: 'Улыбнись',
     price: 6600,
     size: '630 × 220 мм',
+    rent: [1700, 2200, 2700],
     photoColor: 'yellow',
     colors: ALL_COLORS,
     defaultColor: 'yellow',
@@ -65,6 +160,7 @@ export const PRODUCTS = [
     name: 'Крылья ангела',
     price: 12400,
     size: '1000 × 800 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'warm-white',
     colors: ALL_COLORS,
     defaultColor: 'warm-white',
@@ -86,6 +182,7 @@ export const PRODUCTS = [
     name: 'Dream',
     price: 9900,
     size: '1260 × 600 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'lilac',
     colors: ALL_COLORS,
     defaultColor: 'lilac',
@@ -128,6 +225,7 @@ export const PRODUCTS = [
     name: 'Кот',
     price: 14400,
     size: '600 × 600 мм',
+    rent: [3000, 3500, 4000],
     photoColor: 'multi',
     colors: ['multi'],
     defaultColor: 'multi',
@@ -149,6 +247,7 @@ export const PRODUCTS = [
     name: 'Happy Birthday',
     price: 10900,
     size: '1200 × 400 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'neutral-white',
     colors: ALL_COLORS,
     defaultColor: 'neutral-white',
@@ -169,6 +268,7 @@ export const PRODUCTS = [
     name: 'Love',
     price: 11900,
     size: '960 × 860 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'cold-white',
     colors: ALL_COLORS,
     defaultColor: 'cold-white',
@@ -189,6 +289,7 @@ export const PRODUCTS = [
     name: 'Единорог',
     price: 12800,
     size: '465 × 488 мм',
+    rent: [3000, 3500, 4000],
     photoColor: 'multi',
     colors: ['multi'],
     defaultColor: 'multi',
@@ -209,6 +310,7 @@ export const PRODUCTS = [
     name: 'Под счастливой звездой',
     price: 11000,
     size: '900 × 380 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'warm-white',
     colors: ALL_COLORS,
     defaultColor: 'warm-white',
@@ -229,6 +331,7 @@ export const PRODUCTS = [
     name: 'С днём рождения · шары',
     price: 16900,
     size: '1050 × 950 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'multi',
     colors: ['multi'],
     defaultColor: 'multi',
@@ -249,6 +352,7 @@ export const PRODUCTS = [
     name: 'Сердца',
     price: 9400,
     size: '900 × 890 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'pink',
     colors: ALL_COLORS,
     defaultColor: 'pink',
@@ -269,6 +373,7 @@ export const PRODUCTS = [
     name: 'Соник',
     price: 14600,
     size: '600 × 670 мм',
+    rent: [3000, 3500, 4000],
     photoColor: 'multi',
     colors: ['multi'],
     defaultColor: 'multi',
@@ -289,6 +394,7 @@ export const PRODUCTS = [
     name: 'Принцесса',
     price: 8600,
     size: '1100 × 400 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'pink',
     colors: ALL_COLORS,
     defaultColor: 'pink',
@@ -349,6 +455,7 @@ export const PRODUCTS = [
     name: 'Мы тебя любим!',
     price: 9800,
     size: '1750 × 330 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'pink',
     colors: ALL_COLORS,
     defaultColor: 'pink',
@@ -369,6 +476,7 @@ export const PRODUCTS = [
     name: 'Сердце',
     price: 7100,
     size: '790 × 700 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'cold-white',
     colors: ALL_COLORS,
     defaultColor: 'cold-white',
@@ -389,6 +497,7 @@ export const PRODUCTS = [
     name: 'Цифра 6',
     price: 9800,
     size: '800 × 1050 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'cold-white',
     colors: ALL_COLORS,
     defaultColor: 'cold-white',
@@ -409,6 +518,7 @@ export const PRODUCTS = [
     name: 'Туфли',
     price: 6200,
     size: '340 × 340 мм',
+    rent: [1000, 1500, 2000],
     photoColor: 'red',
     colors: ALL_COLORS,
     defaultColor: 'red',
@@ -429,6 +539,7 @@ export const PRODUCTS = [
     name: 'С днём рождения',
     price: 12100,
     size: '1200 × 600 мм',
+    rent: [2000, 2500, 3000],
     photoColor: 'pink',
     colors: ALL_COLORS,
     defaultColor: 'pink',
@@ -469,6 +580,7 @@ export const PRODUCTS = [
     name: 'Love mini',
     price: 6500,
     size: '350 × 170 мм',
+    rent: [1000, 1500, 2000],
     photoColor: 'pink',
     colors: ALL_COLORS,
     defaultColor: 'pink',
@@ -504,14 +616,22 @@ export const PRODUCTS = [
     images: photos('cska', 3),
     card: img('cska', 'card'),
   },
+  ...MARQUEES,
 ]
 
 export const FEATURED = PRODUCTS.filter((p) => p.featured)
+export const RENTABLE = PRODUCTS.filter((p) => p.rent)
+
+// Сроки аренды — в том же порядке, что цены в product.rent.
+export const RENT_TERMS = ['24 часа', '48 часов', '72 часа']
 
 // Основная категория — первая в списке categories, её название показывается на карточке.
 export const categoryName = (product) => CATEGORIES.find((c) => c.id === product.categories[0]).name
 
 export const productBySlug = (slug) => PRODUCTS.find((p) => p.slug === slug)
+
+// Цена для карточки и страницы товара: у бегущих строк её нет.
+export const priceLabel = (product) => (product.price ? formatPrice(product.price) : 'По запросу')
 
 export const formatPrice = (n) => `${n.toLocaleString('ru-RU').replace(/ /g, ' ')} ₽`
 
@@ -525,6 +645,15 @@ export const plural = (n, [one, few, many]) => {
 }
 
 export const signsWord = (n) => plural(n, ['вывеска', 'вывески', 'вывесок'])
+
+// Характеристики бегущей строки — без обещаний по срокам и электронике: детали согласует менеджер.
+export const MARQUEE_SPECS = [
+  ['Тип', 'Светодиодная бегущая строка'],
+  ['Свечение', 'Одноцветное или RGB'],
+  ['Текст', 'Любой, согласуем перед изготовлением'],
+  ['Установка', 'В помещении, на витрине или над входом'],
+  ['Срок и цена', 'Рассчитаем под ваш размер'],
+]
 
 // Общие характеристики гибкого неона — с сайта производства.
 export const SPECS = [

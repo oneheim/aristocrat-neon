@@ -5,7 +5,7 @@ import SectionTitle from '../components/SectionTitle.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 import CtaBlock from '../components/CtaBlock.jsx'
 import { Arrow } from '../components/Hero.jsx'
-import { CATEGORIES, PRODUCTS, formatPrice, signsWord } from '../data/products.js'
+import { CATEGORIES, PRODUCTS, RENTABLE, formatPrice, signsWord } from '../data/products.js'
 import { useSlidingThumb } from '../lib/useSlidingThumb.js'
 
 const RIBS = Array.from({ length: 22 })
@@ -67,31 +67,50 @@ const KIT = [
 
 const FREE = ['в цене', 'бесплатно', 'базовая цена']
 
-const COUNTS = Object.fromEntries(
-  CATEGORIES.map((c) => [c.id, PRODUCTS.filter((p) => p.categories.includes(c.id)).length]),
-)
-const MIN_PRICE = Math.min(...PRODUCTS.map((p) => p.price))
+// «Все» и «Покупка» показывают одни и те же вывески, но в «Покупке» на карточках нет переключателя аренды.
+const MODES = [
+  { id: 'all', name: 'Все', items: PRODUCTS },
+  { id: 'buy', name: 'Покупка', items: PRODUCTS },
+  { id: 'rent', name: 'Аренда', items: RENTABLE },
+]
+
+const countsFor = (items) =>
+  Object.fromEntries(CATEGORIES.map((c) => [c.id, items.filter((p) => p.categories.includes(c.id)).length]))
+const COUNTS = { all: countsFor(PRODUCTS), buy: countsFor(PRODUCTS), rent: countsFor(RENTABLE) }
+const MIN_PRICE = Math.min(...PRODUCTS.filter((p) => p.price).map((p) => p.price))
+const MIN_RENT = Math.min(...RENTABLE.map((p) => p.rent[0]))
 
 export default function CatalogPage() {
   const [params, setParams] = useSearchParams()
   const anchor = useRef(null)
   const bar = useRef(null)
   const thumb = useRef(null)
+  const modeBar = useRef(null)
+  const modeThumb = useRef(null)
 
-  const cat = COUNTS[params.get('cat')] ? params.get('cat') : 'all'
+  const mode = MODES.some((m) => m.id === params.get('mode')) ? params.get('mode') : 'all'
+  // Категория, в которой нет товаров для текущего режима (бегущих строк в аренде), не показывается.
+  const cat = COUNTS[mode][params.get('cat')] ? params.get('cat') : 'all'
   const sort = SORTS.some((s) => s.id === params.get('sort')) ? params.get('sort') : 'popular'
+  const pool = mode === 'rent' ? RENTABLE : PRODUCTS
 
   useEffect(() => {
     document.title = 'Каталог неоновых вывесок — aristocrat. neon'
   }, [])
 
+  useSlidingThumb(modeBar, modeThumb, mode)
   useSlidingThumb(bar, thumb, cat)
 
   const list = useMemo(() => {
-    const items = cat === 'all' ? PRODUCTS : PRODUCTS.filter((p) => p.categories.includes(cat))
+    const items = cat === 'all' ? pool : pool.filter((p) => p.categories.includes(cat))
     if (sort === 'popular') return items
-    return [...items].sort((a, b) => (sort === 'cheap' ? a.price - b.price : b.price - a.price))
-  }, [cat, sort])
+    // «По запросу» — в конце при любой сортировке по цене.
+    const price = (p) => (mode === 'rent' ? p.rent[0] : p.price)
+    return [...items].sort((a, b) => {
+      if (!price(a) || !price(b)) return !price(a) - !price(b)
+      return sort === 'cheap' ? price(a) - price(b) : price(b) - price(a)
+    })
+  }, [pool, mode, cat, sort])
 
   const update = (key, value, fallback) => {
     const next = new URLSearchParams(params)
@@ -132,7 +151,9 @@ export default function CatalogPage() {
             </nav>
             <div className="pill hero__pill hero-in" style={{ '--d': '60ms' }}>
               <span className="pill__dot" />
-              {PRODUCTS.length} {signsWord(PRODUCTS.length)} · от {formatPrice(MIN_PRICE)}
+              {mode === 'rent'
+                ? `${RENTABLE.length} ${signsWord(RENTABLE.length)} в аренду · от ${formatPrice(MIN_RENT)} в сутки`
+                : `${PRODUCTS.length} ${signsWord(PRODUCTS.length)} · от ${formatPrice(MIN_PRICE)}`}
             </div>
             <h1 id="catalog-title" className="hero__title">
               <span className="hero-in" style={{ '--d': '120ms' }}>
@@ -164,32 +185,51 @@ export default function CatalogPage() {
 
       <section className="section cat-section" id="signs" aria-label="Вывески">
         <div ref={anchor} />
-        <div className="cat-bar" role="group" aria-label="Категории" ref={bar}>
-          <span className="cat-bar__thumb" ref={thumb} aria-hidden="true" />
-          <button
-            type="button"
-            className={`cat-chip${cat === 'all' ? ' is-active' : ''}`}
-            aria-pressed={cat === 'all'}
-            onClick={() => update('cat', 'all', 'all')}
-          >
-            Все <span className="cat-chip__n">{PRODUCTS.length}</span>
-          </button>
-          {CATEGORIES.map((c) => (
+        <div className="cat-filters">
+          <div className="cat-bar cat-bar--mode" role="group" aria-label="Покупка или аренда" ref={modeBar}>
+            <span className="cat-bar__thumb" ref={modeThumb} aria-hidden="true" />
+            {MODES.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className={`cat-chip${mode === m.id ? ' is-active' : ''}`}
+                aria-pressed={mode === m.id}
+                onClick={() => update('mode', m.id, 'all')}
+              >
+                {m.name} <span className="cat-chip__n">{m.items.length}</span>
+              </button>
+            ))}
+          </div>
+          <div className="cat-bar" role="group" aria-label="Категории" ref={bar}>
+            <span className="cat-bar__thumb" ref={thumb} aria-hidden="true" />
             <button
-              key={c.id}
               type="button"
-              className={`cat-chip${cat === c.id ? ' is-active' : ''}`}
-              aria-pressed={cat === c.id}
-              onClick={() => update('cat', c.id, 'all')}
+              className={`cat-chip${cat === 'all' ? ' is-active' : ''}`}
+              aria-pressed={cat === 'all'}
+              onClick={() => update('cat', 'all', 'all')}
             >
-              {c.name} <span className="cat-chip__n">{COUNTS[c.id]}</span>
+              Все <span className="cat-chip__n">{pool.length}</span>
             </button>
-          ))}
+            {CATEGORIES.filter((c) => COUNTS[mode][c.id]).map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`cat-chip${cat === c.id ? ' is-active' : ''}`}
+                aria-pressed={cat === c.id}
+                onClick={() => update('cat', c.id, 'all')}
+              >
+                {c.name} <span className="cat-chip__n">{COUNTS[mode][c.id]}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="cat-meta">
           <p className="cat-meta__count" aria-live="polite">
             Показано <strong>{list.length}</strong> {signsWord(list.length)}
+            {mode === 'rent' && (
+              <span className="cat-meta__note"> · цена аренды за сутки, каждые следующие сутки +500 ₽</span>
+            )}
           </p>
           <div className="segmented" role="group" aria-label="Сортировка">
             {SORTS.map((s) => (
@@ -206,9 +246,15 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        <div className="catalog-grid" key={`${cat}-${sort}`}>
+        <div className="catalog-grid" key={`${mode}-${cat}-${sort}`}>
           {list.map((p, i) => (
-            <ProductCard key={p.slug} product={p} delay={(i % 3) * 90} />
+            <ProductCard
+              key={p.slug}
+              product={p}
+              rent={mode === 'rent'}
+              rentToggle={mode !== 'buy'}
+              delay={(i % 3) * 90}
+            />
           ))}
           <Link to="/#constructor" className="catalog-custom" data-reveal data-reveal-delay="90">
             <span className="eyebrow">Не нашли свою?</span>

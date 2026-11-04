@@ -5,6 +5,7 @@ import { useLayoutEffect } from 'react'
 export function useSlidingThumb(bar, thumb, active) {
   useLayoutEffect(() => {
     const el = bar.current
+    if (!el) return
     const chip = el.querySelector('.cat-chip.is-active')
     const place = () => {
       thumb.current.style.width = `${chip.offsetWidth}px`

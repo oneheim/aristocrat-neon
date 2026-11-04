@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import Logo from './Logo.jsx'
 import { CONTACTS, telegramLink, whatsappLink } from '../config.js'
-import { FEATURED } from '../data/products.js'
+import { COMPANIES } from '../data/group.js'
 
 export default function Footer() {
   const year = new Date().getFullYear()
@@ -36,24 +36,22 @@ export default function Footer() {
 
         <div className="footer__cols">
           <div data-reveal>
-            <h3 className="footer__h">Каталог</h3>
+            <h3 className="footer__h">Aristocrat Group</h3>
             <ul>
-              {FEATURED.map((p) => (
-                <li key={p.slug}>
-                  <Link to={`/catalog/${p.slug}`}>{p.name}</Link>
+              {COMPANIES.map((c) => (
+                <li key={c.site}>
+                  <a href={`https://${c.site}/`} target="_blank" rel="noopener noreferrer">
+                    {c.name}
+                  </a>
                 </li>
               ))}
-              <li>
-                <Link to="/catalog" className="footer__all">
-                  Весь каталог →
-                </Link>
-              </li>
             </ul>
           </div>
           <div data-reveal data-reveal-delay="80">
             <h3 className="footer__h">Навигация</h3>
             <ul>
               <li><Link to="/catalog">Каталог</Link></li>
+              <li><Link to="/catalog?mode=rent">Аренда</Link></li>
               <li><Link to="/cases">Кейсы</Link></li>
               <li><Link to="/#constructor">Конструктор</Link></li>
               <li><Link to="/#process">Как работаем</Link></li>

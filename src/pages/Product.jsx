@@ -1,18 +1,27 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 
 import NotFound from './NotFound.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 import { Arrow } from '../components/Hero.jsx'
 import { TgIcon, WaIcon } from '../components/Constructor.jsx'
-import { PRODUCTS, SPECS, formatPrice, productBySlug } from '../data/products.js'
+import MarqueeBoard from '../components/MarqueeBoard.jsx'
+import { MARQUEE_SPECS, PRODUCTS, RENT_TERMS, SPECS, formatPrice, priceLabel, productBySlug } from '../data/products.js'
 import { colorById } from '../data/colors.js'
 import { sendOrder } from '../lib/order.js'
+import { useSlidingThumb } from '../lib/useSlidingThumb.js'
 
 const PERKS = [
   ['Бесплатный макет', 'покажем вывеску в вашем цвете и размере до оплаты'],
   ['От 1 рабочего дня', 'собственное производство в Москве'],
   ['Доставка по России', 'по Москве — 700 ₽, самовывоз бесплатно'],
+]
+
+// У бегущих строк срок зависит от размера — вместо «от 1 рабочего дня» обещаем только расчёт.
+const MARQUEE_PERKS = [
+  ['Бесплатный макет', 'покажем табло с вашим текстом до оплаты'],
+  ['Расчёт под задачу', 'цену и срок посчитаем под ваш размер'],
+  PERKS[2],
 ]
 
 export default function Product() {
@@ -24,23 +33,44 @@ export default function Product() {
 }
 
 function ProductView({ product }) {
+  const [params] = useSearchParams()
   const [active, setActive] = useState(0)
   const [colorId, setColorId] = useState(product.defaultColor)
-  const color = colorById(colorId)
+  const [renting, setRenting] = useState(Boolean(product.rent) && params.get('mode') === 'rent')
+  const [term, setTerm] = useState(0)
+  const modeBar = useRef(null)
+  const modeThumb = useRef(null)
+  useSlidingThumb(modeBar, modeThumb, renting)
+
+  // В аренду сдаём вывески из наличия — цвет свечения как на фото.
+  const color = colorById(renting ? product.photoColor : colorId)
   const others = PRODUCTS.filter((p) => p.slug !== product.slug)
   const isSimilar = (p) => p.categories.some((c) => product.categories.includes(c))
   const related = [...others.filter(isSimilar), ...others.filter((p) => !isSimilar(p))].slice(0, 3)
 
-  useEffect(() => {
-    document.title = `Неоновая вывеска «${product.name}» — aristocrat. neon`
-  }, [product])
+  const kind = product.marquee ? 'Бегущая строка' : 'Неоновая вывеска'
 
-  const message = [
-    `Здравствуйте! Хочу заказать неоновую вывеску «${product.name}».`,
-    `Размер: ${product.size}`,
-    `Цвет: ${color.name}`,
-    `Цена на сайте: ${formatPrice(product.price)}`,
-  ].join('\n')
+  useEffect(() => {
+    document.title = `${kind} «${product.name}» — aristocrat. neon`
+  }, [product, kind])
+
+  const message = (
+    renting
+      ? [
+          `Здравствуйте! Хочу арендовать неоновую вывеску «${product.name}».`,
+          `Размер: ${product.size}`,
+          `Срок аренды: ${RENT_TERMS[term]}`,
+          `Цена на сайте: ${formatPrice(product.rent[term])}`,
+        ]
+      : [
+          product.marquee
+            ? `Здравствуйте! Хочу заказать бегущую строку «${product.name}».`
+            : `Здравствуйте! Хочу заказать неоновую вывеску «${product.name}».`,
+          `Размер: ${product.size}`,
+          `Цвет: ${color.name}`,
+          product.price ? `Цена на сайте: ${formatPrice(product.price)}` : 'Цена: по запросу',
+        ]
+  ).join('\n')
 
   return (
     <article className="product" style={{ '--glow': product.glow }}>
@@ -53,6 +83,13 @@ function ProductView({ product }) {
       </nav>
 
       <div className="product__top">
+        {product.marquee ? (
+          <div className="gallery">
+            <div className="gallery__main gallery__main--led">
+              <MarqueeBoard marquee={product.marquee} color={color.hex} rgb={color.rgb} />
+            </div>
+          </div>
+        ) : (
         <div className="gallery">
           <div className="gallery__main">
             <div className="gallery__halo" aria-hidden="true" />
@@ -99,6 +136,7 @@ function ProductView({ product }) {
             ))}
           </div>
         </div>
+        )}
 
         <div className="product__info">
           <span className="pill product-in" style={{ '--d': '0ms' }}>
@@ -113,12 +151,59 @@ function ProductView({ product }) {
           </p>
 
           <div className="product__buy product-in" style={{ '--d': '240ms' }}>
+            {product.rent && (
+              <div className="cat-bar cat-bar--mode product__mode" role="group" aria-label="Покупка или аренда" ref={modeBar}>
+                <span className="cat-bar__thumb" ref={modeThumb} aria-hidden="true" />
+                <button
+                  type="button"
+                  className={`cat-chip${renting ? '' : ' is-active'}`}
+                  aria-pressed={!renting}
+                  onClick={() => setRenting(false)}
+                >
+                  Купить
+                </button>
+                <button
+                  type="button"
+                  className={`cat-chip${renting ? ' is-active' : ''}`}
+                  aria-pressed={renting}
+                  onClick={() => setRenting(true)}
+                >
+                  Арендовать
+                </button>
+              </div>
+            )}
+
             <div className="product__price-row">
-              <span className="product__price">{formatPrice(product.price)}</span>
+              <span className="product__price" key={renting ? `rent-${term}` : 'buy'}>
+                {renting ? formatPrice(product.rent[term]) : priceLabel(product)}
+              </span>
               <span className="product__size">{product.size}</span>
             </div>
 
-            {product.colors.length > 1 ? (
+            {renting ? (
+              <div className="product__colors">
+                <span className="cn__label">
+                  Срок аренды <em>{RENT_TERMS[term]}</em>
+                </span>
+                <div className="chips chips--even">
+                  {RENT_TERMS.map((t, i) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`chip${term === i ? ' is-active' : ''}`}
+                      aria-pressed={term === i}
+                      onClick={() => setTerm(i)}
+                    >
+                      {t}
+                      <small>{formatPrice(product.rent[i])}</small>
+                    </button>
+                  ))}
+                </div>
+                <p className="product__color-note">
+                  Вывеска из наличия, цвет свечения — как на фото. Доставку и монтаж посчитаем отдельно.
+                </p>
+              </div>
+            ) : product.colors.length > 1 ? (
               <div className="product__colors">
                 <span className="cn__label">
                   Цвет свечения <em>{color.name}</em>
@@ -139,7 +224,7 @@ function ProductView({ product }) {
                     )
                   })}
                 </div>
-                {colorId !== product.photoColor && (
+                {!product.marquee && colorId !== product.photoColor && (
                   <p className="product__color-note">На фото — {colorById(product.photoColor).name.toLowerCase()}. Перед производством пришлём макет в выбранном цвете.</p>
                 )}
               </div>
@@ -155,13 +240,15 @@ function ProductView({ product }) {
                 <WaIcon /> WhatsApp
               </button>
             </div>
-            <Link to="/#constructor" className="product__custom">
-              Хочу похожую со своим текстом <Arrow />
-            </Link>
+            {!product.marquee && (
+              <Link to="/#constructor" className="product__custom">
+                Хочу похожую со своим текстом <Arrow />
+              </Link>
+            )}
           </div>
 
           <ul className="perks product-in" style={{ '--d': '320ms' }}>
-            {PERKS.map(([t, d]) => (
+            {(product.marquee ? MARQUEE_PERKS : PERKS).map(([t, d]) => (
               <li key={t}>
                 <strong>{t}</strong>
                 <span>{d}</span>
@@ -205,7 +292,7 @@ function ProductView({ product }) {
               <dt>Цвет</dt>
               <dd>{color.name}</dd>
             </div>
-            {SPECS.map(([k, v]) => (
+            {(product.marquee ? MARQUEE_SPECS : SPECS).map(([k, v]) => (
               <div key={k}>
                 <dt>{k}</dt>
                 <dd>{v}</dd>

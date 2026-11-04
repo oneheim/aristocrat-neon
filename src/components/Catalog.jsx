@@ -23,9 +23,11 @@ export default function Catalog() {
         ))}
         <Link to="/catalog" className="catalog-all" data-reveal>
           <span className="catalog-all__thumbs" aria-hidden="true">
-            {MORE.slice(0, 5).map((p) => (
-              <img key={p.slug} src={p.card} alt="" loading="lazy" width="56" height="56" />
-            ))}
+            {MORE.filter((p) => p.card)
+              .slice(0, 5)
+              .map((p) => (
+                <img key={p.slug} src={p.card} alt="" loading="lazy" width="56" height="56" />
+              ))}
           </span>
           <span className="catalog-all__text">
             Ещё {MORE.length} {signsWord(MORE.length)} в каталоге

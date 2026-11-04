@@ -6,6 +6,8 @@ import Catalog from '../components/Catalog.jsx'
 import Benefits from '../components/Benefits.jsx'
 import Constructor from '../components/Constructor.jsx'
 import Process from '../components/Process.jsx'
+import FeaturedCases from '../components/FeaturedCases.jsx'
+import Group from '../components/Group.jsx'
 import CtaBlock from '../components/CtaBlock.jsx'
 
 export default function Home() {
@@ -21,6 +23,8 @@ export default function Home() {
       <Benefits />
       <Constructor />
       <Process />
+      <FeaturedCases />
+      <Group />
       <CtaBlock />
     </>
   )
