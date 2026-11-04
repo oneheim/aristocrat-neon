@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 
 import SectionTitle from './SectionTitle.jsx'
 import { Arrow } from './Hero.jsx'
@@ -28,6 +28,9 @@ import { drawPlate } from '../lib/contour.js'
 
 const clampSize = (v) => Math.min(SIZE.max, Math.max(SIZE.min, Number.parseInt(v, 10) || SIZE.min))
 
+// Положение вывески на превью: сдвиг в долях сцены и наклон в градусах.
+const UPRIGHT = { x: 0, y: 0, r: 0 }
+
 // Строки → слова. Пробелы остаются текстом между словами, каждое слово получает ключ w0, w1…
 function splitWords(lines) {
   let n = 0
@@ -50,7 +53,7 @@ export default function Constructor() {
   const [dims, setDims] = useState({ length: '60', width: '45' })
   const [autoWidth, setAutoWidth] = useState(true)
   const [natural, setNatural] = useState({ w: 1, h: 1 })
-  const [shapeId, setShapeId] = useState('contour')
+  const [shapeId, setShapeId] = useState('rect')
   const [materialId, setMaterialId] = useState('clear')
   const [partsId, setPartsId] = useState('black')
   const [mountId, setMountId] = useState('standoffs')
@@ -60,8 +63,8 @@ export default function Constructor() {
   const [wall, setWall] = useState('brick')
   const [wallPhoto, setWallPhoto] = useState(null)
   const [power, setPower] = useState(true)
-  const [layout, setLayout] = useState({})
-  const [selected, setSelected] = useState(null)
+  const [pose, setPose] = useState(UPRIGHT)
+  const [selected, setSelected] = useState(false)
   const [toast, setToast] = useState('')
 
   const kind = TYPES.find((t) => t.id === type)
@@ -83,7 +86,7 @@ export default function Constructor() {
   const lines = (text.trim() ? text : logo ? '' : 'Ваш текст').split('\n').slice(0, 3)
   const rows = splitWords(lines)
   const chars = text.replace(/\s/g, '').length
-  const moved = Object.values(layout).some((p) => p.x || p.y || p.r)
+  const moved = pose.x || pose.y || pose.r
 
   const quote = kind.quote || (isNeon && material.quote)
   const price = neonPrice({
@@ -121,11 +124,9 @@ export default function Constructor() {
     setWall('photo')
   }
 
-  const moveItem = useCallback((key, pos) => setLayout((l) => ({ ...l, [key]: pos })), [])
-
-  const resetLayout = () => {
-    setLayout({})
-    setSelected(null)
+  const resetPose = () => {
+    setPose(UPRIGHT)
+    setSelected(false)
   }
 
   const priceLine = quote
@@ -146,7 +147,7 @@ export default function Constructor() {
     `Размещение: ${place.name.toLowerCase()}`,
     (dimmer || montage) &&
       `Дополнительно: ${[dimmer && 'пульт с диммером', montage && 'монтаж'].filter(Boolean).join(', ')}`,
-    moved && 'Слова расставлены вручную в превью — пришлю скриншот',
+    pose.r && `Наклон вывески: ${Math.abs(Math.round(pose.r))}° — пришлю скриншот превью`,
     priceLine,
   ].filter(Boolean)
   const orderText = ['Здравствуйте! Хочу заказать вывеску из конструктора на сайте aristocrat. neon.', '', ...details].join('\n')
@@ -166,7 +167,7 @@ export default function Constructor() {
         label="Конструктор"
         title="Соберите вывеску"
         script="и увидьте её до заказа"
-        aside="Напишите текст или загрузите логотип, выберите шрифт, цвет и размер — превью и цена обновятся сразу. Слова на превью можно двигать и наклонять. Заявка уйдёт менеджеру в мессенджер, а дизайнер бесплатно доведёт макет."
+        aside="Напишите текст или загрузите логотип, выберите шрифт, цвет и размер — превью и цена обновятся сразу. Вывеску на превью можно двигать и наклонять. Заявка уйдёт менеджеру в мессенджер, а дизайнер бесплатно доведёт макет."
       />
 
       <div className="cn" data-reveal>
@@ -218,21 +219,21 @@ export default function Constructor() {
             onMeasure={setNatural}
             shape={shapeId}
             material={isNeon ? materialId : 'clear'}
-            layout={layout}
+            pose={pose}
             selected={selected}
             onSelect={setSelected}
-            onMove={moveItem}
+            onPose={setPose}
           />
 
           <div className="cn__hint">
             <p>
               {selected
-                ? 'Тяните слово, чтобы сдвинуть, или значок ↻, чтобы наклонить. Стрелки на клавиатуре тоже работают.'
-                : 'Нажмите на слово, чтобы сдвинуть его или наклонить.'}
+                ? 'Тяните вывеску, чтобы сдвинуть, или значок ↻, чтобы наклонить. Стрелки на клавиатуре тоже работают.'
+                : 'Нажмите на вывеску, чтобы сдвинуть её или наклонить.'}
             </p>
             {moved && (
-              <button type="button" className="btn btn--ghost btn--sm" onClick={resetLayout}>
-                Собрать обратно
+              <button type="button" className="btn btn--ghost btn--sm" onClick={resetPose}>
+                Вернуть на место
               </button>
             )}
           </div>
@@ -699,10 +700,10 @@ function Stage({
   onMeasure,
   shape,
   material,
-  layout,
+  pose,
   selected,
   onSelect,
-  onMove,
+  onPose,
 }) {
   const stageRef = useRef(null)
   const measureRef = useRef(null)
@@ -749,16 +750,22 @@ function Stage({
     textTransform: font.upper ? 'uppercase' : 'none',
   }
 
-  const content = (item) => (
+  // Слова и логотип размечены отдельно: по их положению подложка «по форме» обводит надпись.
+  const word = (key, text, children) => (
+    <span key={key} className="neon-word" data-text={text}>
+      {children}
+    </span>
+  )
+  const content = (
     <span className={`neon-sign__block align--${align}`}>
       {logo && (
         <span className="neon-sign__line">
-          {item('logo', '', <img className="neon-logo" src={logo.url} alt="" style={{ width: `${1.6 * logo.ratio}em` }} />)}
+          {word('logo', '', <img className="neon-logo" src={logo.url} alt="" style={{ width: `${1.6 * logo.ratio}em` }} />)}
         </span>
       )}
       {rows.map((row, i) => (
         <span key={i} className="neon-sign__line">
-          {row.map((part) => (part.word ? item(part.key, part.word, part.word) : part.space))}
+          {row.map((part) => (part.word ? word(part.key, part.word, part.word) : part.space))}
         </span>
       ))}
     </span>
@@ -770,38 +777,28 @@ function Stage({
       className={`cn__stage wall--${wall}${power ? ' is-on' : ''}`}
       style={wall === 'photo' && wallPhoto ? { backgroundImage: `url(${wallPhoto})` } : undefined}
       onPointerDown={(e) => {
-        if (!e.target.closest('.neon-word')) onSelect(null)
+        if (!e.target.closest('.cn__board')) onSelect(false)
       }}
     >
       <div className="cn__room-light" style={{ '--c': color.hex }} />
 
-      <div
+      <SignBoard
         className={`cn__board type--${type} shape--${shape} material--${material}`}
         style={{ width: board.w, height: board.h, '--c': color.hex }}
+        stage={stage}
+        pose={pose}
+        selected={selected}
+        onSelect={onSelect}
+        onPose={onPose}
       >
-        {contour && (
-          <ContourPlate signRef={signRef} fontPx={fontPx} font={font} look={plateLook(material, power, color.hex)} layout={layout} />
-        )}
+        {contour && <ContourPlate signRef={signRef} fontPx={fontPx} font={font} look={plateLook(material, power, color.hex)} />}
 
         <div
           ref={signRef}
           className={`neon-sign${power ? ' is-on' : ''}${color.rgb ? ' is-rgb' : ''}`}
           style={{ ...signStyle, fontSize: fontPx }}
         >
-          {content((key, label, children) => (
-            <Word
-              key={key}
-              id={key}
-              label={label}
-              pos={layout[key]}
-              fontPx={fontPx}
-              selected={selected === key}
-              onSelect={onSelect}
-              onMove={onMove}
-            >
-              {children}
-            </Word>
-          ))}
+          {content}
         </div>
 
         <span className="cn__dim cn__dim--x">
@@ -814,20 +811,14 @@ function Stage({
           <b>ширина {width} см</b>
           <i />
         </span>
-      </div>
+      </SignBoard>
 
       <div className="neon-sign neon-measure" ref={measureRef} style={{ ...signStyle, fontSize: 100 }} aria-hidden="true">
-        {content((key, label, children) => (
-          <span key={key} className="neon-word">
-            {children}
-          </span>
-        ))}
+        {content}
       </div>
     </div>
   )
 }
-
-const placeOf = (pos = { x: 0, y: 0, r: 0 }) => `translate(${pos.x}em, ${pos.y}em) rotate(${pos.r}deg)`
 
 const CREAM = '#f5f4ec'
 function mix(a, b, t) {
@@ -848,7 +839,7 @@ function plateLook(material, power, neon) {
 
 // Общая подложка «по форме». Рисуется на холсте по настоящим положениям слов (см. lib/contour.js);
 // пересчитывается, только когда слова, шрифт, размер или цвет действительно изменились.
-function ContourPlate({ signRef, fontPx, font, look, layout }) {
+function ContourPlate({ signRef, fontPx, font, look }) {
   const canvas = useRef(null)
   const last = useRef('')
   const frame = useRef(0)
@@ -866,18 +857,24 @@ function ContourPlate({ signRef, fontPx, font, look, layout }) {
       h: el.offsetHeight,
       text: el.dataset.text,
       img: el.querySelector('img'),
-      pos: layout[el.dataset.key] || { x: 0, y: 0, r: 0 },
     }))
     const width = sign.offsetWidth
     const height = sign.offsetHeight
-    const key = JSON.stringify([items.map((i) => [i.line, i.x, i.y, i.w, i.h, i.text, i.pos, i.img?.src]), width, height, fontPx, font.id, look])
+    const key = JSON.stringify([items.map((i) => [i.line, i.x, i.y, i.w, i.h, i.text, i.img?.src]), width, height, fontPx, font.id, look])
     if (key === last.current) return
     last.current = key
     cancelAnimationFrame(frame.current)
     frame.current = requestAnimationFrame(() => drawPlate(canvas.current, { items, width, height, fontPx, font, look }))
   })
 
-  useEffect(() => () => cancelAnimationFrame(frame.current), [])
+  // Отменённую отрисовку надо повторить при следующем монтировании (StrictMode монтирует эффекты дважды).
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(frame.current)
+      last.current = ''
+    },
+    [],
+  )
 
   return (
     <canvas
@@ -889,22 +886,31 @@ function ContourPlate({ signRef, fontPx, font, look, layout }) {
   )
 }
 
-// Слово или логотип на превью: перетаскивается, наклоняется за значок ↻, двигается стрелками.
-function Word({ id, label, pos = { x: 0, y: 0, r: 0 }, fontPx, selected, onSelect, onMove, children }) {
+// Вывеска целиком — подложка, надпись и размеры одним куском: перетаскивается, наклоняется за значок ↻, двигается стрелками.
+function SignBoard({ className, style, stage, pose, selected, onSelect, onPose, children }) {
   const drag = useRef(null)
   const spin = useRef(null)
 
+  // Центр вывески не уходит дальше 40% сцены от середины, наклон держим в пределах ±180°.
+  const move = (next) => {
+    const p = { ...pose, ...next }
+    const shift = (v) => Math.max(-0.4, Math.min(0.4, v))
+    onPose({ x: shift(p.x), y: shift(p.y), r: ((p.r + 540) % 360) - 180 })
+  }
+
   const startDrag = (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return
+    onSelect(true)
+    // Пальцем первое касание только выделяет вывеску — иначе страницу не пролистать через превью.
+    if (e.pointerType !== 'mouse' && !selected) return
     e.preventDefault()
-    onSelect(id)
     e.currentTarget.setPointerCapture(e.pointerId)
-    drag.current = { px: e.clientX, py: e.clientY, x: pos.x, y: pos.y }
+    drag.current = { px: e.clientX, py: e.clientY, x: pose.x, y: pose.y }
   }
   const doDrag = (e) => {
     const d = drag.current
     if (!d) return
-    onMove(id, { ...pos, x: d.x + (e.clientX - d.px) / fontPx, y: d.y + (e.clientY - d.py) / fontPx })
+    move({ x: d.x + (e.clientX - d.px) / stage.w, y: d.y + (e.clientY - d.py) / stage.h })
   }
 
   const startSpin = (e) => {
@@ -914,7 +920,7 @@ function Word({ id, label, pos = { x: 0, y: 0, r: 0 }, fontPx, selected, onSelec
     const cx = r.left + r.width / 2
     const cy = r.top + r.height / 2
     e.currentTarget.setPointerCapture(e.pointerId)
-    spin.current = { cx, cy, a: Math.atan2(e.clientY - cy, e.clientX - cx), r: pos.r }
+    spin.current = { cx, cy, a: Math.atan2(e.clientY - cy, e.clientX - cx), r: pose.r }
   }
   const doSpin = (e) => {
     const s = spin.current
@@ -922,43 +928,45 @@ function Word({ id, label, pos = { x: 0, y: 0, r: 0 }, fontPx, selected, onSelec
     let r = s.r + ((Math.atan2(e.clientY - s.cy, e.clientX - s.cx) - s.a) * 180) / Math.PI
     r = ((r + 540) % 360) - 180
     if (Math.abs(r) < 3) r = 0
-    onMove(id, { ...pos, r })
+    move({ r })
   }
 
   const onKey = (e) => {
-    const step = e.shiftKey ? 0.2 : 0.05
+    const step = e.shiftKey ? 0.02 : 0.005
     const keys = {
-      ArrowLeft: { x: pos.x - step },
-      ArrowRight: { x: pos.x + step },
-      ArrowUp: { y: pos.y - step },
-      ArrowDown: { y: pos.y + step },
-      '[': { r: pos.r - 5 },
-      ']': { r: pos.r + 5 },
+      ArrowLeft: { x: pose.x - step },
+      ArrowRight: { x: pose.x + step },
+      ArrowUp: { y: pose.y - step },
+      ArrowDown: { y: pose.y + step },
+      '[': { r: pose.r - 5 },
+      ']': { r: pose.r + 5 },
     }
     if (!keys[e.key]) return
     e.preventDefault()
-    onMove(id, { ...pos, ...keys[e.key] })
+    move(keys[e.key])
   }
 
   return (
-    <span
-      className={`neon-word${selected ? ' is-selected' : ''}`}
-      data-key={id}
-      data-text={label}
-      style={{ transform: placeOf(pos) }}
+    <div
+      className={`${className}${selected ? ' is-selected' : ''}`}
+      style={{
+        ...style,
+        transform: `translate(calc(-50% + ${pose.x * stage.w}px), calc(-50% + ${pose.y * stage.h}px)) rotate(${pose.r}deg)`,
+      }}
       tabIndex={0}
-      aria-label={label ? `Слово «${label}»: стрелки сдвигают, квадратные скобки наклоняют` : 'Логотип'}
+      role="group"
+      aria-label="Вывеска: стрелки сдвигают, квадратные скобки наклоняют"
       onPointerDown={startDrag}
       onPointerMove={doDrag}
       onPointerUp={() => (drag.current = null)}
       onPointerCancel={() => (drag.current = null)}
-      onFocus={() => onSelect(id)}
+      onFocus={() => onSelect(true)}
       onKeyDown={onKey}
     >
       {children}
       {selected && (
         <span
-          className="neon-word__spin"
+          className="cn__spin"
           aria-hidden="true"
           onPointerDown={startSpin}
           onPointerMove={doSpin}
@@ -976,7 +984,7 @@ function Word({ id, label, pos = { x: 0, y: 0, r: 0 }, fontPx, selected, onSelec
           </svg>
         </span>
       )}
-    </span>
+    </div>
   )
 }
 

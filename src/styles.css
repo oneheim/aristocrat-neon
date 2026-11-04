@@ -1729,13 +1729,38 @@ button.catalog-custom {
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* Рабочее поле: пропорции = длина × ширина вывески. Ширину и высоту задаёт JS. */
+/* Рабочее поле — вся вывеска: пропорции = длина × ширина, размер, сдвиг и наклон задаёт JS.
+   Пальцем двигаем только выделенную, иначе через превью не пролистать страницу. */
 .cn__board {
   position: absolute;
   left: 50%;
   top: 50%;
   z-index: 4;
   transform: translate(-50%, -50%);
+  border-radius: 12px;
+  outline: 1.5px dashed transparent;
+  outline-offset: 7px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: outline-color 0.2s ease;
+}
+
+.cn__board:active {
+  cursor: grabbing;
+}
+
+.cn__board:hover,
+.cn__board.is-selected {
+  outline-color: rgba(245, 244, 236, 0.4);
+}
+
+.cn__board:focus-visible {
+  outline-color: var(--red-hot);
+}
+
+.cn__board.is-selected {
+  touch-action: none;
 }
 
 .cn__board::before {
@@ -1837,33 +1862,13 @@ button.catalog-custom {
   padding: 0 0.08em;
 }
 
+/* Слово — точка отсчёта для подложки «по форме»; двигается вывеска целиком (.cn__board). */
 .neon-word {
   position: relative;
   display: inline-block;
-  border-radius: 4px;
-  outline: 1.5px dashed transparent;
-  outline-offset: 0.06em;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  transition: outline-color 0.2s ease;
 }
 
-.neon-word:active {
-  cursor: grabbing;
-}
-
-.neon-word:hover,
-.neon-word.is-selected {
-  outline-color: rgba(245, 244, 236, 0.4);
-}
-
-.neon-word:focus-visible {
-  outline: 1.5px dashed var(--red-hot);
-}
-
-.neon-word__spin {
+.cn__spin {
   position: absolute;
   right: -14px;
   top: -14px;
@@ -4984,6 +4989,10 @@ button.catalog-custom {
   .cn__stage {
     min-height: 0;
     aspect-ratio: 4 / 3.4;
+  }
+
+  .cn__board {
+    outline-offset: 4px;
   }
 
   .cn__dim {

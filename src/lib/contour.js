@@ -166,7 +166,7 @@ function stampSegment(mask, w, h, [x1, y1], [x2, y2], r) {
 
 const rgb = (hex) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16))
 
-// items — слова и логотип: строка, положение без поворота (offsetLeft/Top) и сдвиг/наклон из конструктора.
+// items — слова и логотип: строка и положение в надписи (offsetLeft/Top).
 export function drawPlate(canvas, { items, width, height, fontPx, font, look }) {
   const margin = Math.round(fontPx * 0.6)
   const cw = width + margin * 2
@@ -187,12 +187,6 @@ export function drawPlate(canvas, { items, width, height, fontPx, font, look }) 
   sctx.font = `${font.weight || 400} ${fontPx}px ${font.family}`
   sctx.textBaseline = 'alphabetic'
   for (const it of items) {
-    const ox = it.x + it.w / 2
-    const oy = it.y + it.h / 2
-    sctx.save()
-    sctx.translate(ox + it.pos.x * fontPx, oy + it.pos.y * fontPx)
-    sctx.rotate((it.pos.r * Math.PI) / 180)
-    sctx.translate(-ox, -oy)
     if (it.img) {
       if (it.img.complete) sctx.drawImage(it.img, it.x + it.img.offsetLeft, it.y + it.img.offsetTop, it.img.offsetWidth, it.img.offsetHeight)
     } else {
@@ -203,16 +197,14 @@ export function drawPlate(canvas, { items, width, height, fontPx, font, look }) 
       it.baseline = it.y + (it.h - ascent - descent) / 2 + ascent
       sctx.fillText(text, it.x, it.baseline)
     }
-    sctx.restore()
   }
   // Пробел между словами одной строки заливаем полосой высотой со строчные буквы —
-  // иначе контуры соседних слов сходятся тонкой талией. Слова, которые сдвинули вручную, соединяет перемычка (шаг 3).
-  const still = (it) => !it.pos.x && !it.pos.y && !it.pos.r && !it.img
+  // иначе контуры соседних слов сходятся тонкой талией. Строки между собой соединяет перемычка (шаг 3).
   const xHeight = sctx.measureText(font.upper ? 'Х' : 'х').actualBoundingBoxAscent || fontPx * 0.5
   for (let i = 1; i < items.length; i++) {
     const a = items[i - 1]
     const b = items[i]
-    if (a.line !== b.line || !still(a) || !still(b)) continue
+    if (a.line !== b.line || a.img || b.img) continue
     const left = a.x + a.w - fontPx * 0.08
     sctx.fillRect(left, a.baseline - xHeight * 0.85, b.x + fontPx * 0.08 - left, xHeight * 0.85)
   }
